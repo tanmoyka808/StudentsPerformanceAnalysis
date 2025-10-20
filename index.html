@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Analysis</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for Chart.js tooltips */
+        .chartjs-tooltip {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 4px;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <!-- Header -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-gray-900">Student Performance Dashboard</h1>
+            <p class="mt-2 text-lg text-gray-600">An analysis of factors influencing student test scores.</p>
+        </header>
+
+        <main>
+            <!-- Key Insights Section -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-900">Key Insights</h2>
+                <ul class="list-disc list-inside space-y-3 text-gray-700">
+                    <li>Students who <strong class="text-green-600">completed the test preparation course</strong> scored, on average, <strong class="text-green-600">11.7% higher</strong> than those who did not.</li>
+                    <li>Only <strong class="text-yellow-600">35.8% of students</strong> completed the test preparation course, indicating a significant opportunity for improvement.</li>
+                    <li>On average, <strong class="text-blue-600">female students scored 5.7% higher</strong> than male students, with the largest gap observed in writing scores.</li>
+                    <li>There is a <strong class="text-purple-600">strong positive correlation</strong> between all three scores (Math, Reading, Writing), especially between Reading and Writing (0.95).</li>
+                    <li>Students whose parents hold a <strong class="text-indigo-600">"master's degree"</strong> achieved the highest average scores across all subjects.</li>
+                </ul>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                <!-- Chart 1: Test Preparation Course Completion -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-center">Test Preparation Course Completion</h3>
+                    <div class="h-80 w-full flex justify-center">
+                      <canvas id="prepCourseChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Average Scores by Parental Education Level -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-center">Average Scores by Parental Education</h3>
+                    <div class="h-80 w-full">
+                       <canvas id="parentalEducationChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 3: Average Scores by Gender -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-center">Average Scores by Gender</h3>
+                    <div class="h-80 w-full">
+                      <canvas id="genderScoresChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Table 4: Score Correlation Matrix -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-center">Score Correlation Matrix</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-center border-collapse">
+                            <thead class="bg-gray-200">
+                                <tr>
+                                    <th class="p-3 border"></th>
+                                    <th class="p-3 border">Math</th>
+                                    <th class="p-3 border">Reading</th>
+                                    <th class="p-3 border">Writing</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="font-semibold p-3 border bg-gray-50">Math</td>
+                                    <td class="p-3 border bg-blue-100">1.00</td>
+                                    <td class="p-3 border bg-blue-200">0.82</td>
+                                    <td class="p-3 border bg-blue-200">0.80</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-semibold p-3 border bg-gray-50">Reading</td>
+                                    <td class="p-3 border bg-blue-200">0.82</td>
+                                    <td class="p-3 border bg-blue-100">1.00</td>
+                                    <td class="p-3 border bg-blue-300">0.95</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-semibold p-3 border bg-gray-50">Writing</td>
+                                    <td class="p-3 border bg-blue-200">0.80</td>
+                                    <td class="p-3 border bg-blue-300">0.95</td>
+                                    <td class="p-3 border bg-blue-100">1.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="text-sm text-gray-500 mt-4 text-center">A value closer to 1.00 indicates a stronger positive correlation.</p>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center mt-10 text-gray-500">
+            <p>Analysis based on the Student Performance dataset.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Data extracted from your notebook analysis
+        const prepCourseData = {
+            labels: ['Completed', 'None'],
+            values: [35.8, 64.2]
+        };
+
+        const parentalEducationData = {
+            labels: ["Master's Degree", "Bachelor's Degree", "Associate's Degree", "Some College", "High School", "Some High School"],
+            values: [73.57, 72.93, 69.57, 68.47, 63.09, 65.04].sort((a,b) => b-a) // Sorted to match chart
+        };
+        // Re-sorting labels to match sorted values
+        parentalEducationData.labels = parentalEducationData.labels.sort((a, b) => {
+            const avgA = parentalEducationData.values[parentalEducationData.labels.indexOf(a)];
+            const avgB = parentalEducationData.values[parentalEducationData.labels.indexOf(b)];
+            return parentalEducationData.values.indexOf(avgB) - parentalEducationData.values.indexOf(avgA);
+        });
+
+
+        const genderScoresData = {
+            labels: ['Math', 'Reading', 'Writing'],
+            femaleScores: [63.63, 72.60, 72.46],
+            maleScores: [68.72, 65.47, 63.31]
+        };
+        
+        // Chart configurations
+        const chartPlugins = {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    font: {
+                        family: 'Inter',
+                        size: 14,
+                    }
+                }
+            },
+            tooltip: {
+                enabled: true,
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                titleFont: { family: 'Inter', size: 14, weight: 'bold' },
+                bodyFont: { family: 'Inter', size: 12 },
+            }
+        };
+
+        // 1. Test Prep Chart (Pie)
+        const prepCtx = document.getElementById('prepCourseChart').getContext('2d');
+        new Chart(prepCtx, {
+            type: 'pie',
+            data: {
+                labels: prepCourseData.labels,
+                datasets: [{
+                    label: 'Completion %',
+                    data: prepCourseData.values,
+                    backgroundColor: ['#10B981', '#F59E0B'],
+                    borderColor: '#FFFFFF',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: chartPlugins
+            }
+        });
+
+        // 2. Parental Education Chart (Bar)
+        const parentalCtx = document.getElementById('parentalEducationChart').getContext('2d');
+        new Chart(parentalCtx, {
+            type: 'bar',
+            data: {
+                labels: parentalEducationData.labels,
+                datasets: [{
+                    label: 'Average Score',
+                    data: parentalEducationData.values,
+                    backgroundColor: '#4F46E5',
+                    borderColor: '#4338CA',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    ...chartPlugins,
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: false,
+                        min: 55,
+                        grid: {
+                            color: '#E5E7EB'
+                        },
+                        ticks: { font: { family: 'Inter' } }
+                    },
+                    y: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: { font: { family: 'Inter' } }
+                    }
+                }
+            }
+        });
+
+        // 3. Gender Scores Chart (Grouped Bar)
+        const genderCtx = document.getElementById('genderScoresChart').getContext('2d');
+        new Chart(genderCtx, {
+            type: 'bar',
+            data: {
+                labels: genderScoresData.labels,
+                datasets: [
+                    {
+                        label: 'Female',
+                        data: genderScoresData.femaleScores,
+                        backgroundColor: '#EC4899',
+                        borderColor: '#D9267B',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Male',
+                        data: genderScoresData.maleScores,
+                        backgroundColor: '#3B82F6',
+                        borderColor: '#2563EB',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: chartPlugins,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 50,
+                        title: {
+                            display: true,
+                            text: 'Average Score',
+                            font: { family: 'Inter', size: 14, weight: 'bold' }
+                        },
+                        grid: { color: '#E5E7EB' },
+                        ticks: { font: { family: 'Inter' } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: 'Inter' } }
+                    }
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>
